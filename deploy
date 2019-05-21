@@ -1,0 +1,43 @@
+#!/bin/sh
+#
+# Deploy to a server. Assumes cwd is of the to-be-deployed project.
+#
+# This only copies the binary; you will still need to restart the app.
+#
+
+set -euC
+
+name=$(basename "$(pwd)")
+
+if [ ! -d "./cmd/$name" ]; then
+	echo >&2 "./cmd/$name doesn't exist"
+	exit 1
+fi
+
+# Build
+go generate ./...
+CC=musl-gcc go build -v \
+	-ldflags "-X main.version=${TRAVIS_COMMIT:-$(git log -n1 --format='%h_%cI')}" \
+	"./cmd/$name"
+strip "$name"
+upx -qqq "$name"
+
+# Test
+go test -race -cover ./...
+
+# Send to servers.
+for s in 139.162.153.248; do
+	scp -P9012 "$name" "scp://$s/"
+	sum1=$(sha256sum "$name")
+	sum2=$(ssh -p9012 "$s" sha256sum "$name")
+	rm "$name"
+
+	if [ "$sum1" != "$sum2" ]; then
+		echo >&2 "checksums don't match:"
+		echo >&2 "  local:  $sum1"
+		echo >&2 "  remote: $sum1"
+		exit 1
+	fi
+done
+
+exit 0

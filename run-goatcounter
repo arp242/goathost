@@ -1,0 +1,11 @@
+#!/bin/sh
+
+exec ./goatcounter \
+	-prod \
+	-sentry $%sentry-goatcounter%$ \
+	-domain "goatcounter.com" \
+	-domainstatic "static.goatcounter.com" \
+	-smtp "smtp://localhost:25" \
+	-pgsql -dbconnect 'user=martin dbname=goatcounter sslmode=disable' \
+	"$@" |
+	tee "logs/goatcounter.$(date +%Y%m%d)"

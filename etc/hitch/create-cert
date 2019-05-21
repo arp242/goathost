@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Create certificates. See:
+# https://github.com/Neilpang/acme.sh/wiki/DNS-alias-mode
+#
+# --yes-I-know-dns-manual-mode-enough-go-ahead-please 
+#   Force to use dns manual mode: https://github.com/Neilpang/acme.sh/wiki/dns-manual-mode
+#
+
+cd /etc/hitch
+mkdir -p pem
+
+# GoatCounter
+env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
+	acme.sh \
+	--home '/etc/hitch/acme.sh' \
+	--test \
+	--issue --dns dns_cf \
+	-d goatcounter.com -d '*.goatcounter.com' --challenge-alias goatcount.com 
+
+# code.arp242.net
+# TODO
+# env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
+# 	acme.sh \
+# 	--home '/etc/hitch/acme.sh' \
+# 	--test \
+# 	--issue --dns dns_cf \
+# 	-d goatcounter.com -d '*.goatcounter.com' --challenge-alias goatcount.com 
+
+chmod -R go-rx acme.sh
+# acme.sh --install-cronjob
+
+cat acme.sh/goatcounter.com/goatcounter.com.key \
+    acme.sh/goatcounter.com/fullchain.cer \
+    > pem/goatcounter.pem
+
+chmod 700 pem
+chmod 600 pem/goatcounter.pem
+chown -R hitch:hitch pem

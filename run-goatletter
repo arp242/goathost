@@ -1,0 +1,10 @@
+#!/bin/sh
+
+exec ./goatletter \
+	-prod \
+	-sentry $%sentry-goatletter%$ \
+	-domain "goatletter.com" \
+	-domainstatic "static.goatletter.com" \
+	-smtp "smtp://localhost:25" \
+	"$@" |
+	tee "logs/goatletter.$(date +%Y%m%d)"
