@@ -5,7 +5,7 @@ exec ./goatcounter \
 	-sentry $%sentry-goatcounter%$ \
 	-domain "goatcounter.com" \
 	-domainstatic "static.goatcounter.com" \
-	-smtp "smtp://localhost:25" \
+	-smtp 'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
 	-pgsql -dbconnect 'user=martin dbname=goatcounter sslmode=disable' \
 	"$@" |
 	tee "logs/goatcounter.$(date +%Y%m%d)"

@@ -16,8 +16,11 @@ fi
 
 # Build
 go generate ./...
+ver="$(git log -n1 --format='%h_%cI')"
+req="$(ls -1 ./db/migrate/ | tail -n1)"
+req="${req%.*}"
 CC=musl-gcc go build -v \
-	-ldflags "-X main.version=${TRAVIS_COMMIT:-$(git log -n1 --format='%h_%cI')}" \
+	-ldflags "-X main.version=$ver -X main.requiredVersion=$req" \
 	"./cmd/$name"
 strip "$name"
 upx -qqq "$name"
@@ -27,6 +30,9 @@ go test -race -cover ./...
 
 # Send to servers.
 for s in 139.162.153.248; do
+	# Make backup so we can easily roll back if needed.
+	ssh -p9012 "$s" cp "$name" "$name.$(date +%Y-%m-%dT%H:%M:%S)"
+
 	scp -P9012 "$name" "scp://$s/"
 	sum1=$(sha256sum "$name")
 	sum2=$(ssh -p9012 "$s" sha256sum "$name")

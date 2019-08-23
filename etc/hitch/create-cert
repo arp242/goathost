@@ -16,24 +16,28 @@ env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
 	--home '/etc/hitch/acme.sh' \
 	--test \
 	--issue --dns dns_cf \
-	-d goatcounter.com -d '*.goatcounter.com' --challenge-alias goatcount.com 
-
-# code.arp242.net
-# TODO
-# env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
-# 	acme.sh \
-# 	--home '/etc/hitch/acme.sh' \
-# 	--test \
-# 	--issue --dns dns_cf \
-# 	-d goatcounter.com -d '*.goatcounter.com' --challenge-alias goatcount.com 
-
-chmod -R go-rx acme.sh
-# acme.sh --install-cronjob
-
+	--domain-alias goatcounter.goatcount.com \
+	-d goatcounter.com -d '*.goatcounter.com'
 cat acme.sh/goatcounter.com/goatcounter.com.key \
     acme.sh/goatcounter.com/fullchain.cer \
     > pem/goatcounter.pem
 
+# GoatLetter
+env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
+	acme.sh \
+	--home '/etc/hitch/acme.sh' \
+	--test \
+	--issue --dns dns_cf \
+	--domain-alias goatletter.goatcount.com \
+	-d goatletter.com -d '*.goatletter.com'
+cat acme.sh/goatletter.com/goatletter.com.key \
+    acme.sh/goatletter.com/fullchain.cer \
+    > pem/goatletter.pem
+
+
 chmod 700 pem
-chmod 600 pem/goatcounter.pem
+chmod -R go-rx acme.sh
 chown -R hitch:hitch pem
+# acme.sh --install-cronjob
+
+chmod 600 pem/goatcounter.pem
