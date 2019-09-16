@@ -17,7 +17,7 @@ apk add tzdata mosh tmux hitch acme.sh varnish opensmtpd postgresql
 grep -q '^hitch:' /etc/group  || addgroup -S hitch
 grep -q '^hitch:' /etc/passwd || adduser -h /dev/null -s /sbin/nologin -DHS -G hitch hitch
 
-for s in ntpd postgresql hitch varnishd smtpd; do
+for s in cron ntpd postgresql hitch varnishd smtpd; do
 	rc-update add $s
 	rc-service $s start
 done
