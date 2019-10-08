@@ -7,37 +7,35 @@
 #   Force to use dns manual mode: https://github.com/Neilpang/acme.sh/wiki/dns-manual-mode
 #
 
+set -eu
+
+if [ -z "${1:-}" ]; then
+	echo "need domain as first argument"
+	exit 1
+fi
+domain=$1
+
 cd /etc/hitch
 mkdir -p pem
 
-# GoatCounter
-env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
-	acme.sh \
-	--home '/etc/hitch/acme.sh' \
-	--test \
-	--issue --dns dns_cf \
-	--domain-alias goatcounter.goatcount.com \
-	-d goatcounter.com -d '*.goatcounter.com'
-cat acme.sh/goatcounter.com/goatcounter.com.key \
-    acme.sh/goatcounter.com/fullchain.cer \
-    > pem/goatcounter.pem
+# Special-fu for GoatCounter and GoatLetter, as *.example.com wildcard requires
+# DNS verification.
+if [ "$domain" = "goatcounter.com" ] || [ "$domain" = "goatletter.com" ]; then
+	env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
+		acme.sh --home '/etc/hitch/acme.sh' \
+		--issue --dns dns_cf \
+		--domain-alias "${domain%%.*}.goatcount.com" \
+		-d "$domain" -d "*.$domain"
+else
+	echo "unknown domain: '$domain'"
+	exit 2
+fi
+cat "acme.sh/$domain/$domain.key" \
+	"acme.sh/$domain/fullchain.cer" \
+	> "pem/$domain.pem"
 
-# GoatLetter
-env CF_Email=$%cf-email%$ CF_Key=$%cf-key%$ \
-	acme.sh \
-	--home '/etc/hitch/acme.sh' \
-	--test \
-	--issue --dns dns_cf \
-	--domain-alias goatletter.goatcount.com \
-	-d goatletter.com -d '*.goatletter.com'
-cat acme.sh/goatletter.com/goatletter.com.key \
-    acme.sh/goatletter.com/fullchain.cer \
-    > pem/goatletter.pem
-
-
+# Ensure permissions are correct.
 chmod 700 pem
 chmod -R go-rx acme.sh
 chown -R hitch:hitch pem
-# acme.sh --install-cronjob
-
-chmod 600 pem/goatcounter.pem
+chmod 600 pem/*.pem

@@ -17,7 +17,7 @@ apk add tzdata mosh tmux hitch acme.sh varnish opensmtpd postgresql
 grep -q '^hitch:' /etc/group  || addgroup -S hitch
 grep -q '^hitch:' /etc/passwd || adduser -h /dev/null -s /sbin/nologin -DHS -G hitch hitch
 
-for s in cron ntpd postgresql hitch varnishd smtpd; do
+for s in crond ntpd postgresql hitch varnishd smtpd; do
 	rc-update add $s
 	rc-service $s start
 done
@@ -35,7 +35,9 @@ sed -f .secrets 'run-goatletter'  > /home/martin/run-goatletter
 sed -f .secrets 'run-goatcounter' > /home/martin/run-goatcounter
 
 # Create certificates.
-[ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert
+[ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert goatcounter.com
+[ -f /etc/hitch/pem/goatletter.pem ]  || /etc/hitch/create-cert goatletter.com
+# TODO: renew certs; default cronjob won't work for the above two.
 #acme.sh --home '/etc/hitch/acme.sh' --install-cronjob
 
 # Setup iptables

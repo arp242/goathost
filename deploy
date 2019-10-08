@@ -16,11 +16,9 @@ fi
 
 # Build
 go generate ./...
-ver="$(git log -n1 --format='%h_%cI')"
-req="$(ls -1 ./db/migrate/ | tail -n1)"
-req="${req%.*}"
 CC=musl-gcc go build -v \
-	-ldflags "-X main.version=$ver -X main.requiredVersion=$req" \
+	-ldflags "-X main.version=$(git log -n1 --format='%h_%cI')" \
+	-trimpath \
 	"./cmd/$name"
 strip "$name"
 upx -qqq "$name"
@@ -30,21 +28,23 @@ go test -race -cover ./...
 
 # Send to servers.
 for s in 139.162.153.248; do
-	# Make backup so we can easily roll back if needed.
-	# TODO: cleanup older files.
-	ssh -p9012 "$s" cp "$name" "$name.$(date +%Y-%m-%dT%H:%M:%S)"
+	ssh -p9012 "$s" mkdir -p "$name/bin"
 
-	scp -P9012 "$name" "scp://$s/"
+	file="$name/bin/$name.$(date +%Y-%m-%dT%H:%M:%S).$(git log -n1 --format='%h')"
+	scp -P9012 "$name" "scp://$s/$file"
+
 	suml=$(sha256sum "$name")
-	sumr=$(ssh -p9012 "$s" sha256sum "$name")
+	sumr=$(ssh -p9012 "$s" sha256sum "$file")
 	rm "$name"
-
-	if [ "$suml" != "$sumr" ]; then
+	if [ "${suml%% *}" != "${sumr%% *}" ]; then
 		echo >&2 "checksums don't match:"
 		echo >&2 "  local:  $suml"
 		echo >&2 "  remote: $sumr"
 		exit 1
 	fi
+
+	ssh -p9012 "$s" ln -sf '$(readlink -f '"$file"')' "$name/bin/$name"
+	ssh -p9012 "$s" ls -1t "$name/bin" '|' tail -n +101 '|' xargs rm -f
 done
 
 exit 0
