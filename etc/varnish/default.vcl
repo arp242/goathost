@@ -38,10 +38,9 @@ sub vcl_recv {
 	# Select backend.
 	if (req.http.host ~ "goatletter.com$") {
 		set req.backend_hint = goatletter;
-	} else if (req.http.host ~ "goatcounter.com$") {
-		set req.backend_hint = goatcounter;
 	} else {
-		return (synth(404));
+		# Assume GoatCounter; need catch-all for CNAME custom domain.
+		set req.backend_hint = goatcounter;
 	}
 }
 
