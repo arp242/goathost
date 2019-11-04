@@ -16,5 +16,5 @@ exec ./goatcounter/bin/goatcounter \
 	-smtp 'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
 	-certdir "/home/martin" \
 	-pgsql -dbconnect 'user=martin dbname=goatcounter sslmode=disable' \
-	"$@" |
+	"$@" 2>&1 |
 	tee "logs/goatcounter.$(date +%Y%m%d)"

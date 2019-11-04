@@ -8,7 +8,6 @@
 set -euC
 
 name=$(basename "$(pwd)")
-
 if [ ! -d "./cmd/$name" ]; then
 	echo >&2 "./cmd/$name doesn't exist"
 	exit 1
@@ -16,9 +15,8 @@ fi
 
 # Build
 go generate ./...
-CC=musl-gcc go build -v \
+CC=musl-gcc go build -trimpath \
 	-ldflags "-X main.version=$(git log -n1 --format='%h_%cI')" \
-	-trimpath \
 	"./cmd/$name"
 strip "$name"
 upx -qqq "$name"

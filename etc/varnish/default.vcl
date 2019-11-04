@@ -1,9 +1,9 @@
 # https://varnish-cache.org/docs/6.1/reference/vcl.html
 # https://info.varnish-software.com/blog/one-vcl-per-domain
 # https://docs.fastly.com/guides/vcl-tutorials/vcl-regular-expression-cheat-sheet
-#
-# https://docs.varnish-software.com/policy-engine/filter/ratelimit/
 
+# TODO: https://docs.varnish-software.com/policy-engine/filter/ratelimit/
+# TODO: https://varnish-cache.org/trac/wiki/VCLExampleGrace
 vcl 4.0;
 
 import std;
