@@ -10,11 +10,13 @@
 
 exec ./goatcounter/bin/goatcounter \
 	-prod \
-	-emailerrors "errors@goatcounter.com" \
-	-domain "goatcounter.com" \
-	-domainstatic "static.goatcounter.com" \
-	-smtp 'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
-	-certdir "/home/martin" \
-	-pgsql -dbconnect 'user=martin dbname=goatcounter sslmode=disable' \
+	-plan         'personal' \
+	-emailerrors  'errors@goatcounter.com' \
+	-domain       'goatcounter.com' \
+	-domainstatic 'gc.zgo.at,static.goatcounter.com' \
+	-smtp         'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
+	-certdir      '/home/martin' \
+	-dbconnect    'user=martin dbname=goatcounter sslmode=disable' -pgsql \
+	-stripe       '$%stripe-key%$:$%stripe-wh%$:pk_live_0GXvIndCJpHrEIwPiWxFtqoc00CLyksvMg' \
 	"$@" 2>&1 |
 	tee "logs/goatcounter.$(date +%Y%m%d)"

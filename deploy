@@ -7,7 +7,7 @@
 
 set -euC
 
-name=$(basename "$(pwd)")
+name=$(basename "$PWD")
 if [ ! -d "./cmd/$name" ]; then
 	echo >&2 "./cmd/$name doesn't exist"
 	exit 1
@@ -16,10 +16,9 @@ fi
 # Build
 go generate ./...
 CC=musl-gcc go build -trimpath \
-	-ldflags "-X main.version=$(git log -n1 --format='%h_%cI')" \
+	-ldflags "-s -X main.version=$(git log -n1 --format='%h_%cI')" \
 	"./cmd/$name"
-strip "$name"
-upx -qqq "$name"
+upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"
 
 # Test
 go test -race -cover ./...
