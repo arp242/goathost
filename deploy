@@ -15,7 +15,9 @@ fi
 
 # Build
 go generate ./...
-CC=musl-gcc go build -trimpath \
+# TODO: we still want to build goatletter with cgo/musl-gcc
+#CC=musl-gcc go build -trimpath \
+CGO_ENABLED=0 go build -trimpath \
 	-ldflags "-s -X main.version=$(git log -n1 --format='%h_%cI')" \
 	"./cmd/$name"
 upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"

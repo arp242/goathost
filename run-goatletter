@@ -1,10 +1,10 @@
 #!/bin/sh
 
-exec ./goatletter \
+exec ./goatletter/bin/goatletter \
 	-prod \
-	-sentry $%sentry-goatletter%$ \
-	-domain "goatletter.com" \
-	-domainstatic "static.goatletter.com" \
-	-smtp "smtp://localhost:25" \
+	-emailerrors  'errors@goatcounter.com' \
+	-domain       'goatletter.com' \
+	-domainstatic 'static.goatletter.com' \
+	-smtp         'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
 	"$@" 2>&1 |
 	tee "logs/goatletter.$(date +%Y%m%d)"

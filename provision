@@ -33,6 +33,7 @@ done
 done)
 sed -f .secrets 'run-goatletter'  > /home/martin/run-goatletter
 sed -f .secrets 'run-goatcounter' > /home/martin/run-goatcounter
+chmod a+x /home/martin/run-*
 
 # Create certificates.
 [ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert goatcounter.com
