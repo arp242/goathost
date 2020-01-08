@@ -18,6 +18,11 @@ backend arp242 {
 	.port = "8082";
 }
 
+backend httpbuf {
+	.host = "127.0.0.1";
+	.port = "8100";
+}
+
 # Before we check if we have this in cache.
 #
 # Typically you clean up the request here, removing cookies you don't need,
@@ -66,18 +71,28 @@ sub vcl_recv {
 # other mistakes your backend does.
 sub vcl_backend_response {
 	set beresp.do_gzip = true;  # Compress everything.
+
+	# Make sure we never cache this. Shouldn't really be needed, but with some
+	# curl commands I get a cached response otherwise 🤔 Just be safe about it.
+	if (bereq.url ~ "^/count") {
+		set beresp.ttl = 0s;
+		set beresp.uncacheable = true;
+	}
 }
 
 sub vcl_backend_error {
-	# Retry /count requests; the first 500ms should cover most restarts, but
-	# also wait a bit longer for DB migrations and the like.
 	if (bereq.url ~ "^/count") {
-		if (bereq.retries == 0) {
-			vtc.sleep(500ms);
-		} else {
-			vtc.sleep(1s * bereq.retries * 2);
+		if (bereq.retries >= 3) {
+			set bereq.backend = httpbuf;
+			return(retry);
 		}
+
+		vtc.sleep(300ms * (bereq.retries + 1));
 		return(retry);
+	# } elseif (bereq.url !~ "^/status") {
+	# 	set beresp.http.Content-Type = "text/html; charset=utf-8";
+	# 	set beresp.body = "<h1>Scheduled database maintainance</h1><p>Please try again in 10 minutes or so.</p>";
+	# 	return(deliver);
 	}
 }
 
