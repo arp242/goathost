@@ -1,11 +1,5 @@
 #!/bin/sh
 #
-# 52.1M   goatcounter.2019-09-16T13:51:21.sql
-#  2.1M   goatcounter.2019-09-16T13:51:21.sql.bz2
-#  3.6M   goatcounter.2019-09-16T13:51:21.sql.gz
-#  2.6M   goatcounter.2019-09-16T13:51:21.sql.xz
-#
-# At 2.1M it's ~6G/month.
 
 su martin -c 'pg_dump goatcounter | bzip2 > "/home/martin/backup/goatcounter.$(date +%Y-%m-%dT%H:%M:%S).sql.bz2"'
-su martin -c 'find /home/martin/backup/goatcounter.* -mtime +30 -delete'
+su martin -c 'find /home/martin/backup/goatcounter.* -mtime +14 -delete'
