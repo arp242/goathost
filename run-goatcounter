@@ -1,22 +1,22 @@
 #!/bin/sh
 #
-# TODO: make it easier to run older versions:
-#
-#   ./run-goatcounter             run latest
-#   ./run-goatcounter 1           run one older
-#   ./run-goatcounter 2           run two older
-#   ./run-goatcounter 132fabc     run specific commit
-#
 
-exec ./goatcounter/bin/goatcounter \
-	-prod \
-	-plan         'personal' \
-	-emailerrors  'errors@goatcounter.com' \
-	-domain       'goatcounter.com' \
-	-domainstatic 'gc.zgo.at,static.goatcounter.com' \
-	-smtp         'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
-	-certdir      '/home/martin' \
-	-dbconnect    'user=martin dbname=goatcounter sslmode=disable' -pgsql \
-	-stripe       '$%stripe-key%$:$%stripe-wh%$:pk_live_0GXvIndCJpHrEIwPiWxFtqoc00CLyksvMg' \
+bin="./goatcounter/bin/goatcounter"
+
+# Run older versions by commit.
+if [ "$(echo "${1:-}" | head -c4)" = "run:" ]; then
+	version=${1#run:}
+	shift
+	bin="./goatcounter/bin/goatcounter."*".$version"
+fi
+
+echo "Running $bin"
+exec "$bin" saas \
+	-db       'postgresql://user=martin dbname=goatcounter sslmode=disable' \
+	-domain   'goatcounter.com, gc.zgo.at, static.goatcounter.com' \
+	-smtp     'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
+	-certdir  '/home/martin' \
+	-errors   'mailto:errors@goatcounter.com' \
+	-stripe   '$%stripe-key%$:$%stripe-wh%$:pk_live_0GXvIndCJpHrEIwPiWxFtqoc00CLyksvMg' \
 	"$@" 2>&1 |
 	tee "logs/goatcounter.$(date +%Y%m%d)"

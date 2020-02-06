@@ -13,6 +13,11 @@ backend goatcounter {
 	.port = "8081";
 }
 
+backend goatcounter_staging {
+	.host = "127.0.0.1";
+	.port = "8083";
+}
+
 backend arp242 {
 	.host = "127.0.0.1";
 	.port = "8082";
@@ -49,13 +54,21 @@ sub vcl_recv {
 		set req.backend_hint = goatletter;
 	} else if (req.http.host ~ "arp242.net$") {
 		if (req.http.host == "stats.arp242.net") {  # Domain conflict
-			set req.backend_hint = goatcounter;
+			if (req.http.Cookie ~ "gc=staging") {
+				set req.backend_hint = goatcounter_staging;
+			} else {
+				set req.backend_hint = goatcounter;
+			}
 		} else {
 			set req.backend_hint = arp242;
 		}
 	} else {
 		# Assume GoatCounter; need catch-all for CNAME custom domain.
-		set req.backend_hint = goatcounter;
+		if (req.http.Cookie ~ "gc=staging") {
+			set req.backend_hint = goatcounter_staging;
+		} else {
+			set req.backend_hint = goatcounter;
+		}
 
 		# Remove cookies; we set cookie for all of *.goatcounter.com now so also
 		# this one.
