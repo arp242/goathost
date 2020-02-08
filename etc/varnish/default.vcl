@@ -33,7 +33,11 @@ backend httpbuf {
 # Typically you clean up the request here, removing cookies you don't need,
 # rewriting the request, etc.
 sub vcl_recv {
-	# Redirect code.arp242.net
+	# Redirect.
+	if (req.http.host == "static.goatcounter.com") {
+		set req.http.x-redir = "https://gc.zgo.at" + req.url;
+		return(synth(301));
+	}
 	if (req.http.host == "code.arp242.net") {
 		set req.http.x-redir = "https://github.com/arp242" + req.url;
 		return(synth(301));
