@@ -13,7 +13,7 @@ fi
 echo "Running $bin"
 exec "$bin" saas \
 	-db       'postgresql://user=martin dbname=goatcounter sslmode=disable' \
-	-domain   'goatcounter.com, gc.zgo.at, static.goatcounter.com' \
+	-domain   'goatcounter.com,gc.zgo.at' \
 	-smtp     'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
 	-certdir  '/home/martin' \
 	-errors   'mailto:errors@goatcounter.com' \
