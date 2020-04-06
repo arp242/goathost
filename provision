@@ -12,15 +12,19 @@ if [ ! -f .secrets ]; then
 fi
 
 apk update
-apk add tzdata mosh tmux hitch acme.sh varnish opensmtpd postgresql
+apk add tzdata mosh tmux hitch acme.sh varnish opensmtpd postgresql logrotate runit
 
+# Setup hitch
 grep -q '^hitch:' /etc/group  || addgroup -S hitch
 grep -q '^hitch:' /etc/passwd || adduser -h /dev/null -s /sbin/nologin -DHS -G hitch hitch
+mkdir -p /var/lib/hitch
+chown hitch:hitch /var/lib/hitch
 
-for s in crond ntpd postgresql hitch varnishd smtpd; do
-	rc-update add $s
-	rc-service $s start
-done
+# Create service users.
+grep -q '^goatcounter:' /etc/group  || addgroup -S goatcounter
+grep -q '^goatletter:'  /etc/group  || addgroup -S goatletter
+grep -q '^goatcounter:' /etc/passwd || adduser -s /sbin/nologin -DS -G goatcounter goatcounter
+grep -q '^goatletter:'  /etc/passwd || adduser -s /sbin/nologin -DS -G goatletter  goatletter
 
 # Copy files.
 (cd ./etc && find -type f | while read f; do
@@ -31,16 +35,19 @@ done
 	chmod $(stat -c %a "$f") "$dst"
 	echo "$dst"
 done)
-sed -f .secrets 'run-goatletter'  > /home/martin/run-goatletter
-sed -f .secrets 'run-goatcounter' > /home/martin/run-goatcounter
-chmod a+x /home/martin/run-*
+sed -f .secrets 'run-goatletter'  > /etc/service/goatletter/run
+sed -f .secrets 'run-goatcounter' > /etc/service/goatcounter/run
+chmod 700 /etc/service/*/run
+chmod 700 /etc/service/*/log/run
 
 # Create certificates.
-[ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert goatcounter.com
-[ -f /etc/hitch/pem/goatletter.pem ]  || /etc/hitch/create-cert goatletter.com
+#[ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert goatcounter.com
+#[ -f /etc/hitch/pem/goatletter.pem ]  || /etc/hitch/create-cert goatletter.com
 # TODO: renew certs; default cronjob won't work for the above two.
 #acme.sh --home '/etc/hitch/acme.sh' --install-cronjob
 
-# Setup iptables
-# TODO: iptables is too retarded and gave me cancer. Easiest way to get Firewall
-# on Linux: run OpenBSD/pf in VM? (only half joking...)
+# Start services.
+for s in crond ntpd postgresql hitch varnishd logrotate runitd; do
+	rc-update add $s
+	rc-service $s start
+done

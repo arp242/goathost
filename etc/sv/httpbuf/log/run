@@ -1,0 +1,4 @@
+#!/bin/sh
+
+[ -d /var/log/httpbuf ] || mkdir -p /var/log/httpbuf
+exec chpst -u root:adm svlogd -tt /var/log/httpbuf

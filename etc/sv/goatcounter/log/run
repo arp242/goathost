@@ -1,0 +1,4 @@
+#!/bin/sh
+
+[ -d /var/log/goatcounter ] || mkdir -p /var/log/goatcounter
+exec chpst -u root:adm svlogd -tt /var/log/goatcounter

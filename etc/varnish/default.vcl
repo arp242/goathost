@@ -48,7 +48,7 @@ sub vcl_recv {
 	}
 
 	# Redirect everything else to HTTPS.
-	if (std.port(local.ip) == 80) {
+	if (std.port(local.ip) == 80 && req.url !~ "(?i)^/\.well-known/acme-challenge/") {
 		set req.http.x-redir = "https://" + req.http.host + req.url;
 		return(synth(301));
 	}

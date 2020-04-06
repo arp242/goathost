@@ -1,0 +1,4 @@
+#!/bin/sh
+
+[ -d /var/log/gc-monitor ] || mkdir -p /var/log/gc-monitor
+exec chpst -u root:adm svlogd -tt /var/log/gc-monitor

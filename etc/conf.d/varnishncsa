@@ -1,0 +1,3 @@
+VARNISHNCSA_OPTS="-q 'ReqURL ne \"/status\"' -F '%h %t \"%r\" %s \"%{Referer}i\"'"
+
+# 1698 root      2h41 /usr/bin/varnishncsa -D -P /run/varnishncsa.pid -a -w /var/log/varnish/varnishncsa.log -q ReqURL ne "/status" -F %h %t "%r" %s "%{Referer}i"

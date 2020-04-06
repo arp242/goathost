@@ -13,11 +13,19 @@ if [ ! -d "./cmd/$name" ]; then
 	exit 1
 fi
 
+link="y"
+case "${1:-}" in
+	"")     ;;
+	"beta") link="" ;;
+	*)      echo "unknown flag: $1"; exit 5 ;;
+esac
+
 # Build
 go generate ./...
-# TODO: we still want to build goatletter with cgo/musl-gcc
-#CC=musl-gcc go build -trimpath \
-CGO_ENABLED=0 go build -trimpath \
+
+#CGO_ENABLED=0 \
+CC=musl-gcc \
+go build -trimpath \
 	-ldflags "-s -X main.version=$(git log -n1 --format='%h_%cI')" \
 	"./cmd/$name"
 upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"
@@ -26,10 +34,10 @@ upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"
 go test -race -cover ./...
 
 # Send to servers.
-for s in 139.162.153.248; do
-	ssh -p9012 "$s" mkdir -p "$name/bin"
+for s in ${SERVERS:-gc-de}; do
+	ssh -p9012 "$s" mkdir -p "/home/$name/bin"
 
-	file="$name/bin/$name.$(date +%Y-%m-%dT%H:%M:%S).$(git log -n1 --format='%h')"
+	file="/home/$name/bin/$name.$(date +%Y-%m-%dT%H:%M:%S).$(git log -n1 --format='%h')"
 	scp -P9012 "$name" "scp://$s/$file"
 
 	suml=$(sha256sum "$name")
@@ -42,8 +50,12 @@ for s in 139.162.153.248; do
 		exit 1
 	fi
 
-	ssh -p9012 "$s" ln -sf '$(readlink -f '"$file"')' "$name/bin/$name"
-	ssh -p9012 "$s" ls -1t "$name/bin" '|' tail -n +101 '|' xargs rm -f
+	if [ -n "$link" ]; then
+		ssh -p9012 "$s" ln -sf '$(readlink -f '"$file"')' "/home/$name/bin/$name"
+		ssh -p9012 "$s" ls -1t "/home/$name/bin" '|' tail -n +101 '|' xargs rm -f
+	else
+		echo "$file"
+	fi
 done
 
 exit 0

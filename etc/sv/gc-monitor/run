@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd /home/goatcounter
+exec chpst -u goatcounter:goatcounter /home/goatcounter/bin/goatcounter monitor \
+	-db 'postgresql://user=martin dbname=goatcounter sslmode=disable'
