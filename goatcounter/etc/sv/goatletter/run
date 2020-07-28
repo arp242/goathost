@@ -1,0 +1,11 @@
+#!/bin/sh
+
+cd /home/goatletter
+exec chpst -u goatletter:goatletter /home/goatletter/bin/goatletter \
+	-prod \
+	-listen       ':8080' \
+	-dbfile       '/home/goatletter/goatletter.sqlite3' \
+	-emailerrors  'errors@goatcounter.com' \
+	-domain       'goatletter.com' \
+	-domainstatic 'static.goatletter.com' \
+	-smtp         'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587'

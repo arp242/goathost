@@ -1,0 +1,13 @@
+#!/bin/sh
+
+exec /usr/sbin/varnishd -F \
+	-j unix,user=varnish  \
+	-f /etc/varnish/default.vcl \
+	-a :80 -a 127.0.0.1:8001,proxy \
+	-p feature=+http2 \
+	-p timeout_idle=60
+
+# You may need to increase the number of open files (-n)
+# and the maximum amount off locked memory (-l)
+# See bug #459142
+#rc_ulimit="-n 32786 -l 82000"

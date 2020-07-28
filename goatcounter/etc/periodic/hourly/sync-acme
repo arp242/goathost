@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /home/goatcounter/acme-secrets
+echo 'mput *.pem' | sftp -P 9012 acmesync@172.104.182.174

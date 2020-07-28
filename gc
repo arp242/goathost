@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+cmd=${1:-}
+[ -z "$cmd" ] && goatcounter  # No command: run help.
+[ -n "${1:-}" ] && shift
+
+goatcounter $cmd -db xxx $@

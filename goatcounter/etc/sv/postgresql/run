@@ -1,0 +1,26 @@
+#!/bin/sh
+
+PGROOT="/var/lib/postgresql/12"  # PostgreSQL's database directory
+PGLOG="/var/log/postgresql.log"  # PostgreSQL's log file.
+
+# Passed to initdb if necessary
+#INITOPTS="-A peer --auth-host=md5 --auth-local=peer --locale en_US.UTF-8"
+#INITOPTS="-A peer --auth-host=scram-sha-256 --auth-local=peer"
+INITOPTS=""
+
+: ${PGDATA:="$PGROOT/data"}
+
+if [ ! -d "$PGDATA" ]; then
+	echo "Initializing database in $PGDATA"
+
+	mkdir -p "$PGDATA"
+	chown -R postgres:postgres "$PGDATA"
+	chmod 0700 "$PGDATA"
+	su - postgres -m -c "/usr/bin/initdb $INITOPTS -D '$PGDATA'" >/dev/null
+
+	if [ -f /etc/postgresql/postgresql.conf ]; then
+		ln -sf /etc/postgresql/postgresql.conf "$PGDATA/postgresql.conf"
+	fi
+fi
+
+exec chpst -u postgres:postgres /usr/bin/postgres -D "$PGDATA" $PGOPTS 2>&1

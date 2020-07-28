@@ -1,9 +1,0 @@
-#!/bin/sh
-
-cd /home/goatcounter
-exec chpst -u goatcounter:goatcounter /home/goatcounter/bin/goatcounter saas \
-	-db       'postgresql://password=$%goatcounter-dbpw%$' \
-	-domain   'goatcounter.com,static.zgo.at,gc.zgo.at' \
-	-smtp     'smtp://carpetsmoker%40fastmail.nl:$%fm-key%$@smtp.fastmail.com:587' \
-	-errors   'mailto:errors@goatcounter.com' \
-	-stripe   '$%stripe-key%$:$%stripe-wh%$:pk_live_0GXvIndCJpHrEIwPiWxFtqoc00CLyksvMg'

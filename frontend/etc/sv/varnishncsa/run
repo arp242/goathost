@@ -1,0 +1,6 @@
+#!/bin/sh
+
+exec /usr/bin/varnishncsa \
+	-a -w /var/log/varnish/varnishncsa.log \
+	-q 'ReqURL ne "/status"' \
+	-F '%h %t "%r" %s "%{Referer}i"'

@@ -1,0 +1,3 @@
+#!/bin/sh
+exe 1>&2
+exec /usr/sbin/haveged --Foreground

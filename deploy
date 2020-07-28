@@ -14,14 +14,16 @@ if [ ! -d "./cmd/$name" ]; then
 fi
 
 link="y"
+quick=0
 case "${1:-}" in
 	"")     ;;
-	"beta") link="" ;;
+	"beta")  link="" ;;
+	"quick") quick=1 ;;
 	*)      echo "unknown flag: $1"; exit 5 ;;
 esac
 
 # Build
-go generate ./...
+[ "$quick" -eq 0 ] && go generate ./...
 
 #CGO_ENABLED=0 \
 CC=musl-gcc \
@@ -31,10 +33,15 @@ go build -trimpath \
 upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"
 
 # Test
-go test -race -cover ./...
+if [ "$quick" -eq 0 ]; then
+	go run ./cmd/check ./...
+	go test -race ./...
+	# TODO: slow
+	#go test -race -tags testpg ./...
+fi
 
 # Send to servers.
-for s in ${SERVERS:-gc-de}; do
+for s in ${SERVERS:-gc-sg}; do
 	ssh -p9012 "$s" mkdir -p "/home/$name/bin"
 
 	file="/home/$name/bin/$name.$(date +%Y-%m-%dT%H:%M:%S).$(git log -n1 --format='%h')"
@@ -52,7 +59,7 @@ for s in ${SERVERS:-gc-de}; do
 
 	if [ -n "$link" ]; then
 		ssh -p9012 "$s" ln -sf '$(readlink -f '"$file"')' "/home/$name/bin/$name"
-		ssh -p9012 "$s" ls -1t "/home/$name/bin" '|' tail -n +101 '|' xargs rm -f
+		# ssh -p9012 "$s" ls -1t "/home/$name/bin/$name"'*' '|' tail -n +10 '|' xargs rm
 	else
 		echo "$file"
 	fi

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -eu
+
+. ./prov
+
+copy_files      'shared'
+copy_files      'goatcounter'
+setup_hostname  'sg.goatcounter.com'
+add_login_user  'martin'
+add_system_user 'goatcounter'
+
+apk add postgresql postgresql-contrib drill whois zstd
+
+setup_services postgresql goatcounter

@@ -1,0 +1,104 @@
+# vim:ft=sh
+
+if [ $(id -u) -ne 0 ]; then
+	echo "yer gonna need root"
+	exit 1
+fi
+if [ ! -f .secrets ]; then
+	echo "yer gonna need the secrets"
+	exit 1
+fi
+
+apk update
+apk del nano sudo chrony acct # Never need these
+apk upgrade
+apk add tzdata mailcap runit socklog zsh tmux mosh htop less # Always want these
+
+# Set root shell
+sed -i 's!/root:/bin/ash!/root:/bin/zsh!' /etc/passwd
+
+### Functions
+
+# Set the hostname.
+setup_hostname() {
+	echo "$1" > /etc/hostname
+}
+
+# Add a login user.
+add_login_user() {
+	local user=$1
+
+	grep -q "^$user:" /etc/group  || addgroup -S $user
+	grep -q "^$user:" /etc/passwd || adduser -s /bin/zsh -G $user $user
+
+	#createuser --no-createdb --superuser "$user"
+
+	# Copy key Linode set up for us.
+	if [ ! -d /home/$user/.ssh ] && [ -d /root/.ssh ]; then
+		mkdir /home/$user/.ssh
+		cp -r /root/.ssh/authorized_keys /home/$user/.ssh/
+		chown $user:$user /home/$user/.ssh/authorized_keys
+		chmod 500 /home/$user/.ssh/authorized_keys
+	fi
+
+	# Always configure ssh to disalllow root logins; we don't need it if we have
+	# a login user.
+	sed -i \
+		-e 's/^PermitRootLogin yes/#PermitRootLogin yes/;' \
+		-e 's/^#PasswordAuthentication yes/PasswordAuthentication no/;' \
+		-e 's/^#Port 22/Port 9012/;' \
+		/etc/ssh/sshd_config
+}
+
+# Add a sytem user.
+add_system_user() {
+	local user=$1
+	grep -q "^$user:" /etc/group  || addgroup -S "$user";
+	grep -q "^$user:" /etc/passwd || adduser -s /sbin/nologin -DHS -G "$user" "$user"
+}
+
+# Copy files.
+copy_files() {
+	local profile=$1
+
+	(cd ./$profile && find -L -type f | while read f; do
+		dst="/$f"
+		mkdir -p "$(dirname "$dst")"
+		sed -f ../.secrets "$f" > "$dst"
+
+		chmod $(stat -c %a "$f") "$dst"
+		echo "$dst"
+	done)
+}
+
+setup_services() {
+	mkdir -p /var/service
+	(
+		cd /var/service
+		ln -vsf /etc/sv/crond .
+		ln -vsf /etc/sv/socklog-unix .
+		ln -vsf /etc/sv/sshd .
+		ln -vsf /etc/sv/ntpd .
+
+		for s in $@; do
+			if [ ! -d /etc/sv/$s ]; then
+				echo "/etc/sv/$s does not exist"
+				exit 1
+			fi
+			ln -vsf /etc/sv/$s .
+		done
+	)
+
+	# Use runit
+	rc-update add runit
+	rm -fr /etc/service  # Runit package adds this
+	rc-update del crond   ||:
+	rc-update del sshd    ||:
+	rc-update del haveged ||:
+	rc-update add local default ||:
+
+	rc-service runit start
+	rc-service crond   stop
+	rc-service sshd    stop
+	rc-service haveged stop
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mkdir -p /var/lib/hitch
+chown hitch:hitch /var/lib/hitch
+
+# That last bit is needed to ensure Hitch prefers the wildcard ones first, and
+# the more specific acme-generated CNAME ones second.
+exec /usr/sbin/hitch --config=/etc/hitch/hitch.conf /etc/hitch/pem/*.pem

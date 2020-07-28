@@ -1,4 +1,0 @@
-#!/bin/sh
-
-su martin -c 'pg_dump goatcounter | zstd -11 > "/home/martin/backup/15min/goatcounter.$(date +%Y-%m-%dT%H:%M:%S).sql.zst"'
-su martin -c 'find /home/martin/backup/15min/goatcounter.* -mtime +2 -delete'

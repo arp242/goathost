@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set -eu
+
+. ./prov
+
+copy_files      'shared'
+copy_files      'frontend'
+setup_hostname  'fe-sg.goatcounter.com'
+add_login_user  'martin'
+add_system_user 'hitch'
+
+apk add hitch acme.sh varnish
+
+# Setup user to sftp the acme certs to.
+setup_acmesync() {
+	grep -q "^acmesync:" /etc/passwd || adduser -D acmesync
+	echo 'acmesync:thisdoesntneedapassword' | chpasswd
+
+	su -l -c 'ssh-keygen -t ed25519 -f /home/acmesync/.ssh/id_ed25519 -N ""' acmesync
+	cat /home/acmesync/.ssh/id_ed25519.pub >> /home/acmesync/.ssh/authorized_keys
+	chmod 600 /home/acmesync/.ssh/authorized_keys
+
+	mkdir /home/acmesync/pem
+	chown root:root /home/acmesync
+	chown acmesync:hitch /home/acmesync/pem
+
+	if ! grep -q 'Match user acmesync' /etc/ssh/sshd_config; then
+cat <<EOF >> /etc/ssh/sshd_config
+Match user acmesync
+	ForceCommand internal-sftp -u 0007 -d /pem
+	AllowTcpForwarding no
+	ChrootDirectory %h
+EOF
+	fi
+}
+
+setup_acmesync
+
+# Create certificates.
+#[ -f /etc/hitch/pem/goatcounter.pem ] || /etc/hitch/create-cert goatcounter.com
+#[ -f /etc/hitch/pem/goatletter.pem ]  || /etc/hitch/create-cert goatletter.com
+# TODO: renew certs; default cronjob won't work for the above two.
+#acme.sh --home '/etc/hitch/acme.sh' --install-cronjob
+
+setup_services varnishd varnishncsa hitch httpbuf

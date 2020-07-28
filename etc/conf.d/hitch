@@ -1,1 +1,0 @@
-HITCH_OPTS="--config /etc/hitch/hitch.conf /etc/hitch/pem/*.pem"
