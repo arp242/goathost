@@ -3,21 +3,14 @@ vcl 4.0;
 import std;
 import vtc;
 
-backend goatletter {
-	.host = "139.162.153.248";  # gc-de
-	#.host = "139.162.3.42";     # gc-sg
-	.port = "8080";
-}
-
 backend goatcounter {
-	.host = "139.162.153.248";  # gc-de
-	#.host = "139.162.3.42";     # gc-sg
+	.host = "139.162.3.42"; # gc-sg
 	.port = "8081";
 }
 
 backend httpbuf {
 	.host = "127.0.0.1";
-	.port = "8100";
+	.port = "8082";
 }
 
 # Before we check if we have this in cache.
@@ -43,8 +36,7 @@ sub vcl_recv {
 		return(synth(301));
 	}
 
-	# Probably the previous owner of the IP address; prevents logging needless
-	# 400s
+	# Probably previous owner of the IP address; prevents logging needless 400s.
 	if (req.http.host == "army2phl.tk") {
 		return(syncth(410));
 	}
@@ -57,18 +49,12 @@ sub vcl_recv {
 
 	# GoatAnalytics only works for /count
 	if (req.http.host ~ "goatanalytics.com$" && req.url !~ "^/count") {
-			set req.http.x-redir = "https://" + regsub(req.http.host, "goatanalytics", "goatcounter") + req.url;
-			return(synth(301));
+		set req.http.x-redir = "https://" + regsub(req.http.host, "goatanalytics", "goatcounter") + req.url;
+		return(synth(301));
 	}
 
-	# Select backend.
-	if (req.http.host ~ "goatletter.com$") {
-		set req.backend_hint = goatletter;
-	}
 	# Assume GoatCounter; need catch-all for CNAME custom domain.
-	else {
-		set req.backend_hint = goatcounter;
-	}
+	set req.backend_hint = goatcounter;
 }
 
 # After we have read the response headers from the backend.
@@ -78,7 +64,7 @@ sub vcl_recv {
 sub vcl_backend_response {
 	# Compress everything.
 	if (beresp.http.Content-Type != "application/gzip") {
-			set beresp.do_gzip = true;
+		set beresp.do_gzip = true;
 	}
 
 	# Make sure we never cache this. Shouldn't really be needed, but with some

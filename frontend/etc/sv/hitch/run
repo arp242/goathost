@@ -3,6 +3,7 @@
 mkdir -p /var/lib/hitch
 chown hitch:hitch /var/lib/hitch
 
-# That last bit is needed to ensure Hitch prefers the wildcard ones first, and
-# the more specific acme-generated CNAME ones second.
+ulimit -Hn 16384
+ulimit -Sn 4096
+
 exec /usr/sbin/hitch --config=/etc/hitch/hitch.conf /etc/hitch/pem/*.pem

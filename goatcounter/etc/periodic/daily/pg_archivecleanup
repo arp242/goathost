@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd /var/lib/postgresql/current/backup
+rm=$(find . -maxdepth 1 -type f -a -mtime +2 -exec ls -tr {} \+ | grep -E '[0-9A-F]{24}.zst$' | tail -n1)
+pg_archivecleanup -x .zst /var/lib/postgresql/current/backup "${rm#./}"

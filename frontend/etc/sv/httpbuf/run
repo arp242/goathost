@@ -1,3 +1,4 @@
 #!/bin/sh
 
-exec chpst -u goatcounter:goatcounter /home/goatcounter/bin/httpbuf
+export GOATCOUNTER_BUFFER_SECRET=$%httpbuf%$
+exec chpst -u martin:martin /usr/local/bin/goatcounter buffer -backend http://139.162.3.42:8081

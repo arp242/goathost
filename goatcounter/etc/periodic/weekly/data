@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -euC
-
-su postgres -c /home/goatcounter/export-data

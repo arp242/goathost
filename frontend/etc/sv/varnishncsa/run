@@ -3,4 +3,4 @@
 exec /usr/bin/varnishncsa \
 	-a -w /var/log/varnish/varnishncsa.log \
 	-q 'ReqURL ne "/status"' \
-	-F '%h %t "%r" %s "%{Referer}i"'
+	-F '%h "%{X-Forwarded-For}i" %t "%r" %s "%{Referer}i" "%{User-agent}i"'

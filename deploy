@@ -25,19 +25,23 @@ esac
 # Build
 [ "$quick" -eq 0 ] && go generate ./...
 
-#CGO_ENABLED=0 \
-CC=musl-gcc \
+v=$(git tag -l --points-at "$(git log -n1 --format='%H')")
+if [ -z "$v" ]; then
+	v=$(git log -n1 --format='%h_%cI')
+fi
+
+#CC=musl-gcc \
+CGO_ENABLED=0 \
 go build -trimpath \
-	-ldflags "-s -X main.version=$(git log -n1 --format='%h_%cI')" \
+	-ldflags "-X zgo.at/goatcounter/v2.Version=$v" \
 	"./cmd/$name"
 upx -qqq "$name" || echo >&2 "upx not in PATH: skipping compress stage"
 
 # Test
 if [ "$quick" -eq 0 ]; then
-	go run ./cmd/check ./...
+	#go run ./cmd/check ./...
 	go test -race ./...
-	# TODO: slow
-	#go test -race -tags testpg ./...
+	go test -race -tags testpg ./...
 fi
 
 # Send to servers.
